@@ -1,7 +1,22 @@
+import React from "react";
+import Header from "./components/Header";
+import SideMenu from "./components/SideMenu";
+import NoVideoAvailable from "./components/NoVideoAvailable";
+import { Outlet } from "react-router";
+import UploadVideoModalPopup from "./components/UploadVideoModalPopup";
+import EditPersonalInformation from "./components/EditPersonalInformation";
+import EditChannelInfo from "./components/EditChannelInfo";
+import EditVideoModalPopup from "./components/EditVideoModalPopup";
+
 function App() {
 	return (
-		<div className="flex justify-center items-center h-screen bg-gray-900 text-white">
-			<h1 className="text-5xl">Frontend Under Development</h1>
+		<div className="h-screen overflow-y-auto bg-[#121212] text-white">
+			<Header />
+			<Outlet />
+			{/* <EditVideoModalPopup /> */}
+
+			{/* <EditChannelInfo /> */}
+			{/* <UploadVideoModalPopup /> */}
 		</div>
 	);
 }

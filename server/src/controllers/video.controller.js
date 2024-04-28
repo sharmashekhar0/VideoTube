@@ -16,7 +16,15 @@ const getAllVideos = asyncHandler(async (req, res) => {
         pipeline.push({ $match: { isPublished: true } });
     }
 
-    // Add more stages as per your requirements
+    // Lookup stage to join with User collection and get the owner's username
+    pipeline.push({
+        $lookup: {
+            from: "users", // Name of the User collection
+            localField: "owner",
+            foreignField: "_id",
+            as: "ownerInfo",
+        },
+    });
 
     // Example: Pagination using skip and limit
     const skip = (page - 1) * limit;
@@ -30,11 +38,36 @@ const getAllVideos = asyncHandler(async (req, res) => {
         pipeline.push({ $sort: { [sortField]: sortOrder } });
     }
 
+    // Project stage to reshape the output
+    pipeline.push({
+        $project: {
+            _id: 1,
+            title: 1,
+            description: 1,
+            videoFile: 1,
+            thumbnail: 1,
+            duration: 1,
+            views: 1,
+            isPublished: 1,
+            createdAt: 1,
+            updatedAt: 1,
+            username: { $arrayElemAt: ["$ownerInfo.username", 0] }, // Get the username from the ownerInfo array
+            fullName: { $arrayElemAt: ["$ownerInfo.fullName", 0] },
+            avatar: { $arrayElemAt: ["$ownerInfo.avatar", 0] },
+        },
+    });
+
     // Execute the aggregation
     const videos = await Video.aggregate(pipeline);
 
     // Send response
-    res.json(videos);
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            { videoDetails: videos },
+            "Videos fetched successfully"
+        )
+    );
 });
 
 const publishVideo = asyncHandler(async (req, res) => {
@@ -89,16 +122,46 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Video id not found");
     }
 
-    const video = await Video.findById(new mongoose.Types.ObjectId(videoId));
+    // Construct the aggregation pipeline
+    const pipeline = [
+        {
+            $match: { _id: new mongoose.Types.ObjectId(videoId) },
+        },
+        {
+            $lookup: {
+                from: "users", // Name of the User collection
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerInfo",
+            },
+        },
+        {
+            $project: {
+                _id: 1,
+                title: 1,
+                description: 1,
+                videoFile: 1,
+                thumbnail: 1,
+                duration: 1,
+                views: 1,
+                isPublished: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                username: { $arrayElemAt: ["$ownerInfo.username", 0] }, // Get the username from the ownerInfo array
+            },
+        },
+    ];
 
-    if (!video) {
+    const video = await Video.aggregate(pipeline);
+
+    if (!video || video.length === 0) {
         throw new ApiError(400, "Video Not Found");
     }
 
     res.status(200).json(
         new ApiResponse(
             200,
-            { videoDetails: video },
+            { videoDetails: video[0] },
             "Video found successfully"
         )
     );

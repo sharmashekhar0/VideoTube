@@ -5,10 +5,12 @@ import {
     logout,
     refreshAccessToken,
     changeCurrentPassword,
-    updateAccountDetails,
     getCurrentUser,
+    updateAccountDetails,
     updateAvatar,
     updateCoverImage,
+    getWatchHistory,
+    getUserChannelProfile,
 } from "../controllers/user.controller.js";
 import { upload } from "../middlewares/multer.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -30,6 +32,8 @@ router.route("/register").post(
 );
 router.route("/login").post(login);
 router.route("/logout").post(logout);
+router.route("/history").get(verifyJWT, getWatchHistory);
+router.route("/c/:username").get(getUserChannelProfile);
 router.route("/refresh-token").post(verifyJWT, refreshAccessToken);
 router.route("/change-password").post(verifyJWT, changeCurrentPassword);
 router.route("/current-user").get(verifyJWT, getCurrentUser);

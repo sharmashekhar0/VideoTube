@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -27,16 +28,6 @@ const generateAccessAndRefreshToken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
     try {
-        // get user details from frontend
-        // validation - not empty
-        // check if user already exists: username, email
-        // check for images, check for avatar
-        // upload them to cloudinary, avatar
-        // create user object - create entry in db
-        // remove password and refresh token field from response
-        // check for user creation
-        // return res
-
         const { username, fullName, email, password } = req.body;
 
         if (
@@ -68,6 +59,8 @@ const registerUser = asyncHandler(async (req, res) => {
         ) {
             coverImageLocalPath = req.files?.coverImage[0]?.path;
         }
+
+        console.log("Avatar local path :: ", avatarLocalPath);
 
         if (!avatarLocalPath) {
             throw new ApiError(401, "Avatar file required");
@@ -114,13 +107,6 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 const login = asyncHandler(async (req, res) => {
-    // req body -> data
-    // username or email
-    //find the user
-    //password check
-    //access and referesh token
-    //send cookie
-
     const { username, email, password } = req.body;
 
     console.log("Body :: ", req.body);
@@ -387,16 +373,40 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
             },
         },
         {
+            $lookup: {
+                from: "playlists",
+                localField: "_id",
+                foreignField: "owner",
+                as: "playlists",
+            },
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "_id",
+                foreignField: "owner",
+                as: "videos",
+            },
+        },
+        {
+            $lookup: {
+                from: "tweets",
+                localField: "_id",
+                foreignField: "owner",
+                as: "tweets",
+            },
+        },
+        {
             $addFields: {
                 subscriberCount: {
                     $size: "$subscribers",
                 },
                 channelSubscribedToCount: {
-                    $size: "$subsribedTo",
+                    $size: "$subscribedTo",
                 },
                 isSubscribed: {
                     $cond: {
-                        $if: {
+                        if: {
                             $in: [req.user?._id, "$subscribers.subscriber"],
                         },
                         then: true,
@@ -415,12 +425,15 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 avatar: 1,
                 coverImage: 1,
                 email: 1,
+                videos: 1,
+                tweets: 1,
+                playlists: 1,
             },
         },
     ]);
 
     if (!channel?.length) {
-        throw new ApiError(404, "channel not found");
+        throw new ApiError(404, "Channel not found");
     }
 
     res.status(200).json(
@@ -471,12 +484,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
         },
     ]);
 
+    console.log("User :: ", user);
+
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                user[0].watchHistory,
+                { history: user[0].watchHistory },
                 "Watch history fetched successfully"
             )
         );
