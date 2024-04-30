@@ -48,6 +48,7 @@ const login = async (data) => {
 
 		logginInUser = await logginInUser.json();
 		console.log("User logged in :: ", logginInUser);
+		return logginInUser.data.user;
 	} catch (error) {
 		console.log("Error while logging the user :: ", error);
 	}
@@ -66,6 +67,7 @@ const logout = async () => {
 			}
 		);
 		console.log("User Logged out :: ", await response.json());
+		return response;
 	} catch (error) {
 		console.log("Error while logging out :: ", error);
 	}
@@ -123,7 +125,9 @@ const getCurrentUser = async () => {
 				credentials: "include",
 			}
 		);
-		console.log("Current User :: ", await response.json());
+		const result = await response.json();
+		console.log("Current User :: ", result);
+		return result;
 	} catch (error) {
 		console.log("Error while getting current user :: ", error);
 	}

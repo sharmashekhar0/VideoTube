@@ -1,19 +1,16 @@
 import React from "react";
+import { useDispatch } from "react-redux";
+import { logout } from "../api/user";
+import { logout as authLogout } from "../store/authSlice";
 
 function Logout() {
+	const dispatch = useDispatch();
 	const logoutHandler = async () => {
 		try {
-			const response = await fetch(
-				"http://localhost:8000/api/v1/users/logout",
-				{
-					method: "POST",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					credentials: "include",
-				}
-			);
-			console.log("Logout Response :: ", await response.json());
+			const response = await logout();
+			if (response) {
+				dispatch(authLogout());
+			}
 		} catch (error) {
 			console.log("Error while logging out :: ", error);
 		}

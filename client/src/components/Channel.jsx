@@ -1,21 +1,4 @@
 import React, { useEffect, useState } from "react";
-import ChannelEmptyVideo from "./ChannelEmptyVideo";
-import ChannelVideoList from "./ChannelVideoList";
-import ChannelEmptyPlaylist from "./ChannelEmptyPlaylist";
-import ChannelPlaylist from "./ChannelPlaylist";
-import ChannelPlaylistVideos from "./ChannelPlaylistVideos";
-import ChannelEmptyTweet from "./ChannelEmptyTweet";
-import ChannelTweets from "./ChannelTweets";
-import ChannelEmptySubscribed from "./ChannelEmptySubscribed";
-import ChannelSubscribed from "./ChannelSubscribed";
-import MyChannelEmptyVideo from "./MyChannelEmptyVideo";
-import UploadVideoModalPopup from "./UploadVideoModalPopup";
-import UploadingVideoModalPopup from "./UploadingVideoModalPopup";
-import MyChannelEmptyTweet from "./MyChannelEmptyTweet";
-import MyChannelTweets from "./MyChannelTweets";
-import EditChannelInfo from "./EditChannelInfo";
-import ChangePassword from "./ChangePassword";
-import DeleteVideoModalPopup from "./DeleteVideoModalPopup";
 import { getUserChannelProfile } from "../api/user";
 import { Link, Outlet } from "react-router-dom";
 

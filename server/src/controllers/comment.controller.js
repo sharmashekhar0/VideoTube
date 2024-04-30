@@ -19,6 +19,33 @@ const getVideoComments = asyncHandler(async (req, res) => {
             },
         },
         {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        {
+            $addFields: {
+                user: { $arrayElemAt: ["$user", 0] }, // Flatten the 'user' array
+            },
+        },
+        {
+            $project: {
+                _id: 1,
+                content: 1,
+                owner: 1,
+                video: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                __v: 1,
+                "user.avatar": 1,
+                "user.username": 1,
+                "user.fullName": 1,
+            },
+        },
+        {
             $sort: {
                 createdAt: -1,
             },

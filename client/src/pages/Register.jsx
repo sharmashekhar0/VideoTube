@@ -1,12 +1,15 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { registerUser } from "../api/user";
+import { useNavigate } from "react-router";
 
 function Register() {
 	const { register, handleSubmit } = useForm();
+	const navigate = useNavigate();
 
 	const registerHandler = async (data) => {
 		await registerUser(data);
+		navigate("/api/v1/users/login");
 	};
 
 	return (

@@ -1,21 +1,39 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { getUserChannelProfile } from "../api/user";
+import { toggleSubscription } from "../api/subscription";
 
 function VideoPlay({ video }) {
 	const [videoSrc, setVideoSrc] = useState(null);
 	const [channel, setChannel] = useState({});
+	const [isChannelSubscribed, setIsChannelSubscribed] = useState(false);
 
 	const getChannelDetailsHandler = async () => {
 		const username = video.username;
 		console.log("Username :: ", video);
 		const result = await getUserChannelProfile(username);
 		setChannel(result);
+		setIsChannelSubscribed(result?.isSubscribed);
+	};
+
+	const toggleSubscriptionHandler = async () => {
+		try {
+			const channelId = channel?._id;
+			const response = await toggleSubscription(channelId);
+			console.log("Subscribe Toggle Response :: ", response);
+			if (response.message === "Channel subscribed successfully") {
+				setIsChannelSubscribed(true);
+			} else {
+				setIsChannelSubscribed(false);
+			}
+		} catch (error) {
+			console.log("Error while toggling subscribe :: ", error);
+		}
 	};
 
 	useEffect(() => {
-		if (video.videoFile) {
-			setVideoSrc(video.videoFile);
+		if (video?.videoFile) {
+			setVideoSrc(video?.videoFile);
 		}
 		getChannelDetailsHandler();
 	}, [video]);
@@ -359,12 +377,22 @@ function VideoPlay({ video }) {
 									></path>
 								</svg>
 							</span>
-							<span className="group-focus/btn:hidden">
-								Subscribe
-							</span>
-							<span className="hidden group-focus/btn:block">
-								Subscribed
-							</span>
+							{!isChannelSubscribed && (
+								<span
+									className="group-focus/btn"
+									onClick={toggleSubscriptionHandler}
+								>
+									Subscribe
+								</span>
+							)}
+							{isChannelSubscribed && (
+								<span
+									className="hidden group-focus/btn:block"
+									onClick={toggleSubscriptionHandler}
+								>
+									Subscribed
+								</span>
+							)}
 						</button>
 					</div>
 				</div>

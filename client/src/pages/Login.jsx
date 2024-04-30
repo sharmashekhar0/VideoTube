@@ -1,12 +1,19 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { login } from "../api/user";
+import { useDispatch } from "react-redux";
+import { login as authLogin } from "../store/authSlice";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
 	const { register, handleSubmit } = useForm();
+	const dispatch = useDispatch();
+	const navigate = useNavigate();
 
 	const loginHandler = async (data) => {
-		await login(data);
+		const loggedInUser = await login(data);
+		dispatch(authLogin(loggedInUser));
+		navigate("/");
 	};
 
 	return (

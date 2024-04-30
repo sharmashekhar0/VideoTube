@@ -6,6 +6,7 @@ import {
 	deleteComment,
 } from "../api/comment";
 import { useForm } from "react-hook-form";
+import timeAgo from "../utils/timeAgo";
 
 function Comments({ videoId }) {
 	const [videoComments, setVideoComments] = useState([]);
@@ -57,23 +58,23 @@ function Comments({ videoId }) {
 							<div className="flex gap-x-4">
 								<div className="mt-2 h-11 w-11 shrink-0">
 									<img
-										src="https://images.pexels.com/photos/18148932/pexels-photo-18148932/free-photo-of-woman-reading-book-on-a-bench.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+										src={comment?.user?.avatar}
 										alt="sarahjv"
 										className="h-full w-full rounded-full"
 									/>
 								</div>
 								<div className="block">
-									<p className="flex items-center text-gray-200">
-										Sarah Johnson · 
+									<p className="flex items-center text-gray-200 gap-4">
+										{comment?.user?.fullName}
 										<span className="text-sm">
-											17 hour ago
+											{timeAgo(comment?.createdAt)}
 										</span>
 									</p>
 									<p className="text-sm text-gray-200">
-										@sarahjv
+										@{comment?.user?.username}
 									</p>
 									<p className="mt-3 text-sm">
-										{comment.content}
+										{comment?.content}
 									</p>
 								</div>
 							</div>

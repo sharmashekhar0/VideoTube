@@ -1,21 +1,19 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import Logout from "./Logout";
+import { useSelector } from "react-redux";
+import { getCurrentUser } from "../api/user";
+import { useDispatch } from "react-redux";
+import { login as authLogin } from "../store/authSlice";
 
 function Header() {
+	const authStatus = useSelector((state) => state.status);
+	const dispatch = useDispatch();
+
 	const getCurrentUserHandler = async () => {
 		try {
-			const response = await fetch(
-				"http://localhost:8000/api/v1/users/current-user/",
-				{
-					method: "GET",
-					headers: {
-						"Content-Type": "application/json",
-					},
-					credentials: "include",
-				}
-			);
-			console.log("Current user response :: ", await response.json());
+			const response = await getCurrentUser();
+			dispatch(authLogin(response.data));
 		} catch (error) {
 			console.log("Error while getting current user :: ", error);
 		}
@@ -308,17 +306,21 @@ function Header() {
 						</li>
 					</ul>
 					<div className="mb-8 mt-auto flex w-full flex-wrap gap-4 px-4 sm:mb-0 sm:mt-0 sm:items-center sm:px-0">
-						<Link to={"api/v1/users/login"}>
-							<button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
-								Login
-							</button>
-						</Link>
-						<Link to={"api/v1/users/register"}>
-							<button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
-								Register
-							</button>
-						</Link>
-						<Logout />
+						{!authStatus && (
+							<>
+								<Link to={"api/v1/users/login"}>
+									<button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
+										Login
+									</button>
+								</Link>
+								<Link to={"api/v1/users/register"}>
+									<button className="mr-1 w-full bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e] sm:w-auto">
+										Register
+									</button>
+								</Link>
+							</>
+						)}
+						{authStatus && <Logout />}
 					</div>
 				</div>
 			</nav>

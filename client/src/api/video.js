@@ -73,12 +73,15 @@ const deleteVideo = async (videoId) => {
 	}
 };
 
-const togglePublishStatus = async () => {
+const togglePublishStatus = async (videoId) => {
 	try {
-		const response = fetch(
-			"http://localhost:8000/api/v1/videos/toggle/publish/:videoId"
+		const response = await fetch(
+			`http://localhost:8000/api/v1/videos/toggle/publish/${videoId}`,
+			{ method: "PATCH", credentials: "include" }
 		);
-		console.log("Toggle Publish Status Response :: ", response);
+		const result = await response.json();
+		console.log("Toggle Publish Status Response :: ", result);
+		return result;
 	} catch (error) {
 		console.log("Error while toggling publish status :: ", error);
 	}

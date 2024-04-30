@@ -7,7 +7,9 @@ const toggleSubscription = async (channelId) => {
 				credentials: "include",
 			}
 		);
-		console.log("Toggle Subscription Response :: ", await response.json());
+		const result = await response.json();
+		console.log("Toggle Subscription Response :: ", result);
+		return result;
 	} catch (error) {
 		console.log("Error while toggling subscription :: ", error);
 	}

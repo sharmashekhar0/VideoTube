@@ -25,6 +25,8 @@ import MyChannelTweets from "./components/MyChannelTweets.jsx";
 import EditChannelInfo from "./components/EditChannelInfo.jsx";
 import ChangePassword from "./components/ChangePassword.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
+import { Provider } from "react-redux";
+import store from "./store/store.js";
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -68,5 +70,7 @@ const router = createBrowserRouter(
 );
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-	<RouterProvider router={router}></RouterProvider>
+	<Provider store={store}>
+		<RouterProvider router={router}></RouterProvider>
+	</Provider>
 );
