@@ -21,7 +21,9 @@ const getUserTweets = async () => {
 			method: "GET",
 			credentials: "include",
 		});
-		console.log("Get User Tweet Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Get User Tweet Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while getting user tweets :: ", error);
 	}

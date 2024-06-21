@@ -72,9 +72,9 @@ function ChannelSubscribers() {
 						<div className="flex items-center gap-x-2">
 							<div className="h-14 w-14 shrink-0">
 								<img
-									src={channelSubscribed.avatar}
+									src={channelSubscribed?.avatar}
 									alt={channelSubscribed.fullName}
-									className="h-full w-full rounded-full"
+									className="h-full w-full rounded-full object-cover"
 								/>
 							</div>
 							<div className="block">

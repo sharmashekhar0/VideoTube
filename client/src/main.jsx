@@ -12,21 +12,19 @@ import {
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import SideMenu from "./components/SideMenu.jsx";
-import NoVideoAvailable from "./components/NoVideoAvailable.jsx";
 import VideoListingCardView from "./components/VideoListingCardView.jsx";
 import VideoDetails from "./pages/VideoDetails.jsx";
 import Channel from "./components/Channel.jsx";
-import ChannelVideoList from "./components/ChannelVideoList.jsx";
-import ChannelPlaylist from "./components/ChannelPlaylist.jsx";
-import ChannelTweets from "./components/ChannelTweets.jsx";
-import ChannelSubscribed from "./components/ChannelSubscribed.jsx";
-import UploadVideoModalPopup from "./components/UploadVideoModalPopup.jsx";
-import MyChannelTweets from "./components/MyChannelTweets.jsx";
-import EditChannelInfo from "./components/EditChannelInfo.jsx";
-import ChangePassword from "./components/ChangePassword.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import { Provider } from "react-redux";
 import store from "./store/store.js";
+import ChannelPlaylistVideos from "./components/ChannelPlaylistVideos.jsx";
+import LikedVideos from "./components/LikedVideos.jsx";
+import WatchHistory from "./components/WatchHistory.jsx";
+import MyChannel from "./components/MyChannel/MyChannel.jsx";
+import RecommendedVideoDetails from "./pages/RecommendedVideoDetails.jsx";
+import ChannelSubscribers from "./components/ChannelSubscribers.jsx";
+import Temp from "./components/Temp.jsx";
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
@@ -46,25 +44,50 @@ const router = createBrowserRouter(
 				path="/api/v1/videos/:videoId"
 				element={<VideoDetails />}
 			></Route>
-			<Route path="/api/v1/users/c/:username" element={<Channel />}>
-				<Route
-					path="/api/v1/users/c/:username/videos"
-					element={<ChangePassword />}
-				></Route>
-				<Route
-					path="/api/v1/users/c/:username/playlist"
-					element={<ChannelPlaylist />}
-				></Route>
-				<Route
-					path="/api/v1/users/c/:username/tweets"
-					element={<MyChannelTweets />}
-				></Route>
-				<Route
-					path="/api/v1/users/c/:username/subscribed"
-					element={<ChannelSubscribed />}
-				></Route>
-			</Route>
+			<Route
+				path="/api/v1/videos/r/:videoId"
+				element={<RecommendedVideoDetails />}
+			></Route>
+			<Route
+				path="/api/v1/users/c/:username"
+				element={<Channel />}
+			></Route>
+			<Route
+				path="/api/v1/users/my-channel/:username"
+				element={<MyChannel />}
+			></Route>
+			<Route
+				path="/api/v1/users/channel/subscribers/"
+				element={<ChannelSubscribers />}
+			></Route>
+			<Route
+				path="/api/v1/playlists/:playlistId"
+				element={
+					<div className="flex">
+						<SideMenu />
+						<ChannelPlaylistVideos />
+					</div>
+				}
+			></Route>
 			<Route path="/admin-dashboard" element={<AdminDashboard />}></Route>
+			<Route
+				path="/liked-videos"
+				element={
+					<div className="flex">
+						<SideMenu />
+						<LikedVideos />
+					</div>
+				}
+			></Route>
+			<Route
+				path="/watch-history"
+				element={
+					<div className="flex">
+						<SideMenu />
+						<WatchHistory />
+					</div>
+				}
+			></Route>
 		</Route>
 	)
 );

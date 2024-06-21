@@ -115,6 +115,26 @@ const publishVideo = asyncHandler(async (req, res) => {
     );
 });
 
+const incrementViewsCount = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!videoId && typeof videoId !== "string") {
+        throw new ApiError(400, "Video ID is required");
+    }
+
+    const video = await Video.findByIdAndUpdate(
+        videoId,
+        { $inc: { views: 1 } },
+        { new: true, useFindAndModify: false }
+    );
+
+    if (!video) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    return res.status(200).json(new ApiResponse(200, video));
+});
+
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
@@ -190,15 +210,14 @@ const updateVideo = asyncHandler(async (req, res) => {
     console.log("Description :: ", description);
     console.log("Thumbnail :: ", thumbnail?.url);
 
+    const updateFields = {};
+    if (title) updateFields.title = title;
+    if (description) updateFields.description = description;
+    if (thumbnail?.url) updateFields.thumbnail = thumbnail?.url;
+
     const result = await Video.findByIdAndUpdate(
         new mongoose.Types.ObjectId(videoId),
-        {
-            $set: {
-                title: title,
-                description: description,
-                thumbnail: thumbnail?.url || "",
-            },
-        },
+        { $set: updateFields },
         { new: true }
     );
 
@@ -255,11 +274,76 @@ const togglePublishStatus = asyncHandler(async (req, res) => {
     );
 });
 
+const getTotalViewsCount = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    const totalViews = await Video.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                totalViews: { $sum: "$views" },
+            },
+        },
+    ]);
+
+    if (totalViews?.length === 0) {
+        return res.status(200).json(new ApiResponse(200, { totalViews: 0 }));
+    }
+
+    return res.status(200).json(new ApiResponse(200, totalViews[0].totalViews));
+});
+
+const getVideoLikeCount = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    const videosLikeCount = await Video.aggregate([
+        {
+            $match: {
+                owner: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes",
+            },
+        },
+        {
+            $project: {
+                _id: 1,
+                likeCount: { $size: "$likes" },
+            },
+        },
+    ]);
+
+    console.log(videosLikeCount);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                videosLikeCount,
+                "Videos like count fetched successfully"
+            )
+        );
+});
+
 export {
     getAllVideos,
     publishVideo,
     getVideoById,
     updateVideo,
     deleteVideo,
+    incrementViewsCount,
     togglePublishStatus,
+    getTotalViewsCount,
+    getVideoLikeCount,
 };

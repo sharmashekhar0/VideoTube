@@ -42,13 +42,52 @@ const getSubscribedChannels = async (subscriberId) => {
 				credentials: "include",
 			}
 		);
-		console.log(
-			"Get Subscribed Channels Response :: ",
-			await response.json()
-		);
+		const res = await response.json();
+		console.log("Get Subscribed Channels Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while getting subscribed channels :: ", error);
 	}
 };
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
+const getChannelSubscriberById = async (channelId) => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/subscriptions/c/channel/subscribed/${channelId}`,
+			{
+				method: "GET",
+				credentials: "include",
+			}
+		);
+		const res = await response.json();
+		console.log("Channel Subscriber Response :: ", res);
+		return res;
+	} catch (error) {
+		console.log("Error while getting channel subscriber :: ", error);
+	}
+};
+
+const getChannelSubscribers = async () => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/subscriptions/c/channel/subscribers/`,
+			{
+				method: "GET",
+				credentials: "include",
+			}
+		);
+		const res = await response.json();
+		console.log("Channel Subscriber Response :: ", res);
+		return res;
+	} catch (error) {
+		console.log("Error while getting channel subscriber :: ", error);
+	}
+};
+
+export {
+	toggleSubscription,
+	getUserChannelSubscribers,
+	getSubscribedChannels,
+	getChannelSubscribers,
+	getChannelSubscriberById,
+};

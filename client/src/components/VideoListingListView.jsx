@@ -1,114 +1,9 @@
 import React from "react";
+import formatNumberIndianSystem from "../utils/formatNumberIndianSystem";
 
-function VideoListingListView() {
+function VideoListingListView({}) {
 	return (
 		<>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/3561339/pexels-photo-3561339.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/3532545/pexels-photo-3532545.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/2519817/pexels-photo-2519817.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/2519812/pexels-photo-2519812.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1739849/pexels-photo-1739849.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1739942/pexels-photo-1739942.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1739854/pexels-photo-1739854.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1739856/pexels-photo-1739856.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144256/pexels-photo-1144256.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144257/pexels-photo-1144257.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144260/pexels-photo-1144260.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144269/pexels-photo-1144269.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144276/pexels-photo-1144276.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144277/pexels-photo-1144277.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144274/pexels-photo-1144274.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144270/pexels-photo-1144270.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144231/pexels-photo-1144231.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/18264716/pexels-photo-18264716/free-photo-of-man-people-laptop-internet.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1144250/pexels-photo-1144250.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1115824/pexels-photo-1115824.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-			<link
-				rel="preload"
-				as="image"
-				href="https://images.pexels.com/photos/1115808/pexels-photo-1115808.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
-			/>
-
 			<section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
 				<div className="flex flex-col gap-4 p-4">
 					<div className="w-full max-w-3xl gap-x-4 md:flex">
@@ -140,7 +35,9 @@ function VideoListingListView() {
 									Types
 								</h6>
 								<p className="flex text-sm text-gray-200 sm:mt-3">
-									10.3k Views · 44 minutes ago
+									{formatNumberIndianSystem(video?.views) ||
+										0}{" "}
+									 Views · 44 minutes ago
 								</p>
 								<div className="flex items-center gap-x-4">
 									<div className="mt-2 hidden h-10 w-10 shrink-0 md:block">
@@ -452,7 +349,9 @@ function VideoListingListView() {
 											className="h-full w-full rounded-full"
 										/>
 									</div>
-									<p className="text-sm text-gray-200">ReactD3</p>
+									<p className="text-sm text-gray-200">
+										ReactD3
+									</p>
 								</div>
 								<p className="mt-2 hidden text-sm md:block">
 									Learn how to build dynamic and interactive

@@ -1,19 +1,32 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { login } from "../api/user";
 import { useDispatch } from "react-redux";
 import { login as authLogin } from "../store/authSlice";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 function Login() {
 	const { register, handleSubmit } = useForm();
+	const [error, setError] = useState("");
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 
 	const loginHandler = async (data) => {
-		const loggedInUser = await login(data);
-		dispatch(authLogin(loggedInUser));
-		navigate("/");
+		try {
+			const loggedInUser = await login(data, setError);
+			if (loggedInUser) {
+				dispatch(authLogin(loggedInUser));
+				navigate("/");
+				toast.success("Login Success");
+			} else {
+				toast.error("Login Failed");
+				console.log("Error :: ", error);
+			}
+		} catch (error) {
+			toast.error("Something went wrong");
+			console.log("Error while logging user :: ", error);
+		}
 	};
 
 	return (

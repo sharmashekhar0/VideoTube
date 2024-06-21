@@ -1,5 +1,6 @@
 const createUserPlaylist = async (data) => {
 	try {
+		console.log("Data ", data);
 		const response = await fetch(
 			"http://localhost:8000/api/v1/playlists/",
 			{
@@ -11,7 +12,9 @@ const createUserPlaylist = async (data) => {
 				body: JSON.stringify(data),
 			}
 		);
-		console.log("Create Playlist Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Create Playlist Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while creating playlist :: ", error);
 	}
@@ -23,7 +26,9 @@ const getUserPlaylists = async () => {
 			method: "GET",
 			credentials: "include",
 		});
-		console.log("Get User Playlist Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Get User Playlist Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while getting user playlists :: ", error);
 	}
@@ -38,7 +43,9 @@ const getPlaylistById = async (playlistId) => {
 				credentials: "include",
 			}
 		);
-		console.log("Get Playlist By Id Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Get Playlist By Id Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while getting playlist by id :: ", error);
 	}
@@ -53,10 +60,9 @@ const addVideoToPlaylist = async (videoId, playlistId) => {
 				credentials: "include",
 			}
 		);
-		console.log(
-			"Add Video To Playlist Response :: ",
-			await response.json()
-		);
+		const res = await response.json();
+		console.log("Add Video To Playlist Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while adding video to playlist :: ", error);
 	}
@@ -71,10 +77,9 @@ const removeVideoFromPlaylist = async (videoId, playlistId) => {
 				credentials: "include",
 			}
 		);
-		console.log(
-			"Remove Video From Playlist Response :: ",
-			await response.json()
-		);
+		const res = await response.json();
+		console.log("Remove Video From Playlist Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while removing video from playlist :: ", error);
 	}

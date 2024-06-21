@@ -1,10 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { getUserChannelProfile } from "../api/user";
 import timeAgo from "../utils/timeAgo";
+import { getAllTweetLike, toggleTweetLike } from "../api/like";
+import { useSelector } from "react-redux";
 
 function ChannelTweets() {
+	const user = useSelector((state) => state.auth.userData);
 	const [channelTweets, SetChannelTweets] = useState([]);
 	const [channel, setChannel] = useState({});
+	const [allTweetLikeCount, setAllTweetLikeCount] = useState({});
+	const [tweetLikedByUser, setTweetLikedByUser] = useState({});
 
 	const getChannelTweetsHandler = async () => {
 		const pathname = window.location.pathname;
@@ -15,8 +20,80 @@ function ChannelTweets() {
 		SetChannelTweets(result.tweets);
 	};
 
+	function countTweetLikes(data) {
+		const result = {};
+
+		data.forEach((item) => {
+			if (item.tweet) {
+				if (result[item.tweet]) {
+					result[item.tweet] += 1;
+				} else {
+					result[item.tweet] = 1;
+				}
+			}
+		});
+
+		return result;
+	}
+
+	function getUserLikedTweets(data, userId) {
+		const result = {};
+
+		data.forEach((item) => {
+			if (item.likedBy === userId && item.tweet) {
+				result[item.tweet] = true;
+			}
+		});
+
+		return result;
+	}
+
+	const toggleTweetLikeHandler = async (tweetId) => {
+		try {
+			console.log(tweetId);
+			const response = await toggleTweetLike(tweetId);
+			if (response?.message === "Tweet like added successfully") {
+				setAllTweetLikeCount((prevState) => ({
+					...prevState,
+					[tweetId]: (prevState[tweetId] || 0) + 1,
+				}));
+				setTweetLikedByUser((prevState) => ({
+					...prevState,
+					[tweetId]: true,
+				}));
+			} else if (
+				response?.message === "Tweet like removed successfully"
+			) {
+				setAllTweetLikeCount((prevState) => ({
+					...prevState,
+					[tweetId]: (prevState[tweetId] || 0) - 1,
+				}));
+				const updatedTweetLikedByUser = { ...tweetLikedByUser };
+				delete updatedTweetLikedByUser[tweetId];
+				setTweetLikedByUser(updatedTweetLikedByUser);
+			}
+		} catch (error) {
+			console.log("Error while toggling tweet like :: ", error);
+		}
+	};
+
+	const getAllTweetLikeHandler = async () => {
+		try {
+			const response = await getAllTweetLike();
+			const tweets = countTweetLikes(response?.data);
+			const userLikedTweet = getUserLikedTweets(response?.data, user._id);
+			console.log(response.data);
+			console.log(tweets);
+			setAllTweetLikeCount(tweets);
+			setTweetLikedByUser(userLikedTweet);
+		} catch (error) {
+			console.log("Error while getting all tweet like :: ", error);
+		}
+	};
+
 	useEffect(() => {
 		getChannelTweetsHandler();
+		getAllTweetLikeHandler();
 	}, []);
 
 	return (
@@ -28,7 +105,7 @@ function ChannelTweets() {
 							<img
 								src={channel?.avatar}
 								alt="React Patterns"
-								className="h-full w-full rounded-full"
+								className="h-full w-full rounded-full object-cover"
 							/>
 						</div>
 						<div className="w-full">
@@ -42,11 +119,12 @@ function ChannelTweets() {
 								</span>
 							</h4>
 							<p className="mb-2">{tweet?.content}</p>
-							<div className="flex gap-4">
+							<div className="flex">
 								<button
 									className="group inline-flex items-center gap-x-1 outline-none after:content-[attr(data-like-count)] focus:after:content-[attr(data-like-count-alt)]"
-									data-like-count="425"
-									data-like-count-alt="426"
+									onClick={() =>
+										toggleTweetLikeHandler(tweet._id)
+									}
 								>
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -55,7 +133,11 @@ function ChannelTweets() {
 										strokeWidth="1.5"
 										stroke="currentColor"
 										aria-hidden="true"
-										className="h-5 w-5 text-inherit group-focus:text-[#ae7aff]"
+										className={`h-5 w-5 ${
+											tweetLikedByUser[tweet._id]
+												? "text-[#ae7aff]"
+												: ""
+										}`}
 									>
 										<path
 											strokeLinecap="round"
@@ -64,7 +146,8 @@ function ChannelTweets() {
 										></path>
 									</svg>
 								</button>
-								<button
+								<span>{allTweetLikeCount[tweet._id] || 0}</span>
+								{/* <button
 									className="group inline-flex items-center gap-x-1 outline-none after:content-[attr(data-dislike-count)] focus:after:content-[attr(data-dislike-count-alt)]"
 									data-dislike-count="87"
 									data-dislike-count-alt="86"
@@ -84,7 +167,7 @@ function ChannelTweets() {
 											d="M7.5 15h2.25m8.024-9.75c.011.05.028.1.052.148.591 1.2.924 2.55.924 3.977a8.96 8.96 0 01-.999 4.125m.023-8.25c-.076-.365.183-.75.575-.75h.908c.889 0 1.713.518 1.972 1.368.339 1.11.521 2.287.521 3.507 0 1.553-.295 3.036-.831 4.398C20.613 14.547 19.833 15 19 15h-1.053c-.472 0-.745-.556-.5-.96a8.95 8.95 0 00.303-.54m.023-8.25H16.48a4.5 4.5 0 01-1.423-.23l-3.114-1.04a4.5 4.5 0 00-1.423-.23H6.504c-.618 0-1.217.247-1.605.729A11.95 11.95 0 002.25 12c0 .434.023.863.068 1.285C2.427 14.306 3.346 15 4.372 15h3.126c.618 0 .991.724.725 1.282A7.471 7.471 0 007.5 19.5a2.25 2.25 0 002.25 2.25.75.75 0 00.75-.75v-.633c0-.573.11-1.14.322-1.672.304-.76.93-1.33 1.653-1.715a9.04 9.04 0 002.86-2.4c.498-.634 1.226-1.08 2.032-1.08h.384"
 										></path>
 									</svg>
-								</button>
+								</button> */}
 							</div>
 						</div>
 					</div>

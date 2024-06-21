@@ -80,18 +80,97 @@ const getPlaylistById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Playlist id is required");
     }
 
-    const playlist = await Playlist.findById(
-        new mongoose.Types.ObjectId(playlistId)
-    );
+    const singlePlaylist = await Playlist.findById(playlistId);
+    console.log(singlePlaylist);
 
-    if (!playlist) {
-        throw new ApiError(400, "Playlist not found");
+    const pipeline = [
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(playlistId),
+            },
+        },
+        {
+            $lookup: {
+                from: "videos", // Assuming your videos collection is named "videos"
+                localField: "videos",
+                foreignField: "_id",
+                as: "videos",
+            },
+        },
+        {
+            $lookup: {
+                from: "users", // Assuming your videos collection is named "videos"
+                localField: "owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+            },
+        },
+        {
+            $unwind: "$ownerDetails",
+        },
+        {
+            $unwind: "$videos", // Unwind the videos array to lookup owner details for each video
+        },
+        {
+            $lookup: {
+                from: "users", // Assuming your users collection is named "users"
+                localField: "videos.owner",
+                foreignField: "_id",
+                as: "videos.ownerDetails",
+            },
+        },
+        {
+            $unwind: "$videos.ownerDetails", // Unwind the ownerDetails array to convert it from array to object
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                owner: { $first: "$owner" },
+                ownerDetails: { $first: "$ownerDetails" },
+                description: { $first: "$description" },
+                createdAt: { $first: "$createdAt" },
+                updatedAt: { $first: "$updatedAt" },
+                videos: {
+                    $push: {
+                        _id: "$videos._id",
+                        title: "$videos.title",
+                        description: "$videos.description",
+                        videoFile: "$videos.videoFile",
+                        thumbnail: "$videos.thumbnail",
+                        duration: "$videos.duration",
+                        views: "$videos.views",
+                        isPublished: "$videos.isPublished",
+                        owner: {
+                            _id: "$videos.ownerDetails._id",
+                            fullName: "$videos.ownerDetails.fullName",
+                            username: "$videos.ownerDetails.username",
+                            email: "$videos.ownerDetails.email",
+                            avatar: "$videos.ownerDetails.avatar",
+                            coverImage: "$videos.ownerDetails.coverImage",
+                        },
+                    },
+                },
+            },
+        },
+        {
+            $addFields: {
+                createdAt: "$createdAt", // Explicitly include the createdAt field
+                updatedAt: "$updatedAt", // Explicitly include the updatedAt field
+            },
+        },
+    ];
+
+    const playlist = await Playlist.aggregate(pipeline);
+
+    if (!playlist || playlist.length === 0) {
+        throw new ApiError(404, "Playlist not found");
     }
 
     res.status(200).json(
         new ApiResponse(
             200,
-            { playlist: playlist },
+            { playlist: playlist[0] }, // Assuming you want to return just one playlist
             "Playlist fetched successfully"
         )
     );

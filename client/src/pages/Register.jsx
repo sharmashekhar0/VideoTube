@@ -1,15 +1,36 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { registerUser } from "../api/user";
 import { useNavigate } from "react-router";
+import { toast } from "react-toastify";
 
 function Register() {
-	const { register, handleSubmit } = useForm();
+	const { register, handleSubmit, setValue } = useForm();
 	const navigate = useNavigate();
+	const [avatar, setAvatar] = useState(null);
 
 	const registerHandler = async (data) => {
-		await registerUser(data);
-		navigate("/api/v1/users/login");
+		try {
+			console.log(data);
+			const response = await registerUser(data);
+			if (response) {
+				toast.success("Register Success");
+				navigate("/api/v1/users/login");
+			} else {
+				toast.error("Register Failed");
+			}
+		} catch (error) {
+			toast?.error("Register Failed");
+			console.log("Error while registering user :: ", error);
+		}
+	};
+
+	const handleAvatarChange = (e) => {
+		const file = e.target.files[0];
+		if (file) {
+			setAvatar(file);
+			setValue("avatar", file);
+		}
 	};
 
 	return (
@@ -33,29 +54,37 @@ function Register() {
 							id="avatar-input-1"
 							hidden
 							type="file"
-							{...register("avatar")}
+							onChange={handleAvatarChange}
 						/>
 						<label
 							htmlFor="avatar-input-1"
 							className="relative flex aspect-square h-24 w-24 cursor-pointer items-center justify-center overflow-visible rounded-full border-4 border-[#ae7aff] p-1"
 						>
-							<div className="flex h-full w-full items-center justify-center rounded-full">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="1.5"
-									stroke="currentColor"
-									aria-hidden="true"
-									className="h-8 w-8 text-white"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M12 4.5v15m7.5-7.5h-15"
-									></path>
-								</svg>
-							</div>
+							{avatar ? (
+								<img
+									src={URL.createObjectURL(avatar)}
+									alt="Avatar Preview"
+									className="h-full w-full rounded-full object-cover"
+								/>
+							) : (
+								<div className="flex h-full w-full items-center justify-center rounded-full">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth="1.5"
+										stroke="currentColor"
+										aria-hidden="true"
+										className="h-8 w-8 text-white"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M12 4.5v15m7.5-7.5h-15"
+										></path>
+									</svg>
+								</div>
+							)}
 							<span className="absolute bottom-0 right-0 flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-[#ae7aff] p-1">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"

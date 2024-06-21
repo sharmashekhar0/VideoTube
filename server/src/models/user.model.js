@@ -36,10 +36,12 @@ const userSchema = new Schema(
         coverImage: {
             type: String,
         },
-        watchHistory: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Video",
-        },
+        watchHistory: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Video",
+            },
+        ],
         refreshToken: {
             type: String,
         },

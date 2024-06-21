@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Logout from "./Logout";
 import { useSelector } from "react-redux";
@@ -7,21 +7,25 @@ import { useDispatch } from "react-redux";
 import { login as authLogin } from "../store/authSlice";
 
 function Header() {
-	const authStatus = useSelector((state) => state.status);
+	const authStatus = useSelector((state) => state.auth.status);
 	const dispatch = useDispatch();
+	const [user, setUser] = useState({});
+	const userData = useSelector((state) => state.auth.userData);
 
 	const getCurrentUserHandler = async () => {
 		try {
 			const response = await getCurrentUser();
-			dispatch(authLogin(response.data));
+			setUser(response?.data);
+			if (response?.data) dispatch(authLogin(response?.data));
 		} catch (error) {
 			console.log("Error while getting current user :: ", error);
 		}
 	};
 
 	useEffect(() => {
-		getCurrentUserHandler();
-	}, []);
+		if (userData) setUser(userData);
+		else getCurrentUserHandler();
+	}, [authStatus]);
 
 	return (
 		<header className="sticky inset-x-0 top-0 z-50 w-full border-b border-white bg-[#121212] px-4">
@@ -252,7 +256,7 @@ function Header() {
 										></path>
 									</svg>
 								</span>
-								<span>My Content</span>
+								<span>Dashboard</span>
 							</button>
 						</li>
 						<li className="w-full">
@@ -319,6 +323,24 @@ function Header() {
 									</button>
 								</Link>
 							</>
+						)}
+						{authStatus && (
+							<div class="mb-8 mt-auto px-4 sm:mb-0 sm:mt-0 sm:px-0">
+								<button class="flex w-full gap-4 text-left sm:items-center">
+									<img
+										src={`${user?.avatar}`}
+										class="h-16 w-16 shrink-0 rounded-full sm:h-12 sm:w-12 object-cover"
+									/>
+									<div class="w-full pt-2 sm:hidden">
+										<h6 class="font-semibold">
+											{user?.fullName}
+										</h6>
+										<p class="text-sm text-gray-300">
+											@{user?.username}
+										</p>
+									</div>
+								</button>
+							</div>
 						)}
 						{authStatus && <Logout />}
 					</div>

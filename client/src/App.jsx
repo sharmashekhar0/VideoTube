@@ -1,16 +1,25 @@
 import React from "react";
 import Header from "./components/Header";
-import SideMenu from "./components/SideMenu";
-import NoVideoAvailable from "./components/NoVideoAvailable";
 import { Outlet } from "react-router";
-import UploadVideoModalPopup from "./components/UploadVideoModalPopup";
-import EditPersonalInformation from "./components/EditPersonalInformation";
-import EditChannelInfo from "./components/EditChannelInfo";
-import EditVideoModalPopup from "./components/EditVideoModalPopup";
+import { Flip, Slide, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
 	return (
 		<div className="h-screen overflow-y-auto bg-[#121212] text-white">
+			<ToastContainer
+				position="top-right"
+				autoClose={2000}
+				hideProgressBar={false}
+				newestOnTop
+				closeOnClick
+				rtl={false}
+				pauseOnFocusLoss
+				draggable
+				pauseOnHover
+				theme="colored"
+				transition:Slide
+			/>
 			<Header />
 			<Outlet />
 			{/* <EditVideoModalPopup /> */}

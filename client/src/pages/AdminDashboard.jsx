@@ -1,13 +1,46 @@
 import React, { useEffect, useState } from "react";
 import { getUserChannelProfile } from "../api/user";
 import { useSelector } from "react-redux";
-import { togglePublishStatus } from "../api/video";
+import {
+	getTotalViewsCount,
+	getVideoLikeCount,
+	togglePublishStatus,
+} from "../api/video";
+import DeleteVideoModalPopup from "../components/DeleteVideoModalPopup";
+import EditVideoModalPopup from "../components/EditVideoModalPopup";
+import UploadVideoModalPopup from "../components/UploadVideoModalPopup";
+import { getLikedVideos } from "../api/like";
+import { Link } from "react-router-dom";
+import useUploadVideo from "../hooks/useUploadVideo";
 
 function AdminDashboard() {
+	const { isOpen, onOpen, onClose } = useUploadVideo();
 	const [userChannelVideos, setUserChannelVideos] = useState([]);
-	const userData = useSelector((state) => state.userData);
+	const userData = useSelector((state) => state.auth.userData);
 	const [userChannel, setUserChannel] = useState({});
-	console.log("User Data :: ", userData);
+	const [totalViewsCount, setTotalViewsCount] = useState(0);
+
+	const [isDeleteVideoModalOpen, setIsDeleteVideoModalOpen] = useState(false);
+	const [isEditVideoModalOpen, setIsEditVideoModalOpen] = useState(false);
+	const [isUploadVideoModalOpen, setIsUploadVideoModalOpen] = useState(false);
+	const [video, setVideo] = useState("");
+	const [likedVideoCount, setLikedVideoCount] = useState(0);
+	const [videoLikeCount, setVideoLikeCount] = useState({});
+
+	const getVideoLikeCountHandler = async () => {
+		try {
+			const response = await getVideoLikeCount();
+			console.log(response?.data);
+			let videoLikes = {};
+			response?.data?.map(({ _id, likeCount }) => {
+				videoLikes[_id] = likeCount;
+			});
+			console.log(videoLikes);
+			setVideoLikeCount(videoLikes);
+		} catch (error) {
+			console.log("Error while getting videos like count :: ", error);
+		}
+	};
 
 	const getUserChannelDetailsHandler = async () => {
 		try {
@@ -15,9 +48,30 @@ function AdminDashboard() {
 			const response = await getUserChannelProfile(username);
 			console.log("Admin Dashboard :: ", response);
 			setUserChannelVideos(response?.videos);
+			console.log(response?.videos);
 			setUserChannel(response);
 		} catch (error) {
 			console.log("Error while getting user profile :: ", error);
+		}
+	};
+
+	const getLikedVideoCountHandler = async () => {
+		try {
+			const response = await getLikedVideos();
+			console.log(response?.data);
+			setLikedVideoCount(response?.data?.likedVideos?.length);
+		} catch (error) {
+			console.log("Error while getting liked video count :: ", error);
+		}
+	};
+
+	const getTotalViewsCountHandler = async () => {
+		try {
+			const response = await getTotalViewsCount();
+			console.log(response);
+			setTotalViewsCount(response?.data);
+		} catch (error) {
+			console.log("Error while getting total views :: ", error);
 		}
 	};
 
@@ -25,6 +79,21 @@ function AdminDashboard() {
 		try {
 			const response = await togglePublishStatus(videoId);
 			console.log("Response Toggle Publish Status :: ", response);
+			const updatedVideo = response?.data?.videoDetails;
+
+			if (!updatedVideo) {
+				throw new Error("Video details not found in response");
+			}
+
+			const updatedVideos = userChannelVideos?.map((video) =>
+				video._id === videoId
+					? {
+							...video,
+							isPublished: updatedVideo?.isPublished,
+					  }
+					: video
+			);
+			setUserChannelVideos(updatedVideos);
 		} catch (error) {
 			console.log("Error while toggling publish status :: ", error);
 		}
@@ -41,7 +110,27 @@ function AdminDashboard() {
 
 	useEffect(() => {
 		getUserChannelDetailsHandler();
+		getLikedVideoCountHandler();
+		getTotalViewsCountHandler();
+		getVideoLikeCountHandler();
 	}, [userData]);
+
+	const uploadVideoHandler = () => {
+		onOpen();
+	};
+
+	const openModal = (modalName, video) => {
+		if (modalName === "delete") setIsDeleteVideoModalOpen(true);
+		else if (modalName === "edit") setIsEditVideoModalOpen(true);
+		else if (modalName === "upload") setIsUploadVideoModalOpen(true);
+		setVideo(video);
+	};
+
+	const closeModal = (modalName) => {
+		if (modalName === "delete") setIsDeleteVideoModalOpen(false);
+		else if (modalName === "edit") setIsEditVideoModalOpen(false);
+		else if (modalName === "upload") setIsUploadVideoModalOpen(false);
+	};
 
 	return (
 		<>
@@ -57,24 +146,29 @@ function AdminDashboard() {
 							</p>
 						</div>
 						<div className="block">
-							<button className="inline-flex items-center gap-x-2 bg-[#ae7aff] px-3 py-2 font-semibold text-black">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									strokeWidth="2"
-									stroke="currentColor"
-									aria-hidden="true"
-									className="h-5 w-5"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M12 4.5v15m7.5-7.5h-15"
-									></path>
-								</svg>
-								Upload video
-							</button>
+							<Link
+								onClick={uploadVideoHandler}
+								to={`/api/v1/users/my-channel/${userData?.username}`}
+							>
+								<button className="inline-flex items-center gap-x-2 bg-[#ae7aff] px-3 py-2 font-semibold text-black">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										strokeWidth="2"
+										stroke="currentColor"
+										aria-hidden="true"
+										className="h-5 w-5"
+									>
+										<path
+											strokeLinecap="round"
+											strokeLinejoin="round"
+											d="M12 4.5v15m7.5-7.5h-15"
+										></path>
+									</svg>
+									Upload video
+								</button>
+							</Link>
 						</div>
 					</div>
 					<div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4">
@@ -103,7 +197,9 @@ function AdminDashboard() {
 								</span>
 							</div>
 							<h6 className="text-gray-300">Total views</h6>
-							<p className="text-3xl font-semibold">221,234</p>
+							<p className="text-3xl font-semibold">
+								{totalViewsCount || 0}
+							</p>
 						</div>
 						<div className="border p-4">
 							<div className="mb-4 block">
@@ -149,7 +245,9 @@ function AdminDashboard() {
 								</span>
 							</div>
 							<h6 className="text-gray-300">Total likes</h6>
-							<p className="text-3xl font-semibold">63,021</p>
+							<p className="text-3xl font-semibold">
+								{likedVideoCount}
+							</p>
 						</div>
 					</div>
 					<div className="w-full overflow-auto">
@@ -176,6 +274,7 @@ function AdminDashboard() {
 							</thead>
 							<tbody>
 								{userChannelVideos?.map((video) => {
+									console.log(videoLikeCount);
 									return (
 										<tr
 											key={video?._id}
@@ -184,12 +283,12 @@ function AdminDashboard() {
 											<td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
 												<div className="flex justify-center">
 													<label
-														htmlFor="vid-pub-1"
+														htmlFor={video?._id}
 														className="relative inline-block w-12 cursor-pointer overflow-hidden"
 													>
 														<input
 															type="checkbox"
-															id="vid-pub-1"
+															id={video?._id}
 															className="peer sr-only"
 															checked={
 																video?.isPublished
@@ -224,7 +323,7 @@ function AdminDashboard() {
 											<td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
 												<div className="flex items-center gap-4">
 													<img
-														className="h-10 w-10 rounded-full"
+														className="h-10 w-10 rounded-full object-cover"
 														src={userData?.avatar}
 														alt="Code Master"
 													/>
@@ -236,10 +335,10 @@ function AdminDashboard() {
 											<td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
 												<div className="flex justify-center gap-4">
 													<span className="inline-block rounded-xl bg-green-200 px-1.5 py-0.5 text-green-700">
-														921 likes
-													</span>
-													<span className="inline-block rounded-xl bg-red-200 px-1.5 py-0.5 text-red-700">
-														49 dislikes
+														{videoLikeCount[
+															video?._id
+														] || 0}{" "}
+														likes
 													</span>
 												</div>
 											</td>
@@ -248,7 +347,15 @@ function AdminDashboard() {
 											</td>
 											<td className="border-collapse border-b border-gray-600 px-4 py-3 group-last:border-none">
 												<div className="flex gap-4">
-													<button className="h-5 w-5 hover:text-[#ae7aff]">
+													<button
+														onClick={() =>
+															openModal(
+																"delete",
+																video
+															)
+														}
+														className="h-5 w-5 hover:text-[#ae7aff]"
+													>
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
 															fill="none"
@@ -264,7 +371,15 @@ function AdminDashboard() {
 															></path>
 														</svg>
 													</button>
-													<button className="h-5 w-5 hover:text-[#ae7aff]">
+													<button
+														onClick={() =>
+															openModal(
+																"edit",
+																video
+															)
+														}
+														className="h-5 w-5 hover:text-[#ae7aff]"
+													>
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
 															fill="none"
@@ -289,6 +404,12 @@ function AdminDashboard() {
 						</table>
 					</div>
 				</div>
+				{isDeleteVideoModalOpen && (
+					<DeleteVideoModalPopup onClose={closeModal} video={video} />
+				)}
+				{isEditVideoModalOpen && (
+					<EditVideoModalPopup onClose={closeModal} video={video} />
+				)}
 			</div>
 		</>
 	);

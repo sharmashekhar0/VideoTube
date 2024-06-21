@@ -2,6 +2,7 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { logout } from "../api/user";
 import { logout as authLogout } from "../store/authSlice";
+import { toast } from "react-toastify";
 
 function Logout() {
 	const dispatch = useDispatch();
@@ -10,8 +11,12 @@ function Logout() {
 			const response = await logout();
 			if (response) {
 				dispatch(authLogout());
+				toast.success("Logout Success");
+			} else {
+				toast.error("Something Went Wrong");
 			}
 		} catch (error) {
+			toast.error("Something Went Wrong");
 			console.log("Error while logging out :: ", error);
 		}
 	};

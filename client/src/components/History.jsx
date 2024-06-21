@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 function History() {
 	return (
 		<section className="w-full pb-[70px] sm:ml-[70px] sm:pb-0 lg:ml-0">
-			<div className="grid grid-cols-[repeat(auto-fit,_minmax(300px,_1fr))] gap-4 p-4">
+			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 gap-4 p-4">
 				{/* {allVideos.map((video) => {
 					return (
 						<Link

@@ -2,7 +2,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { Subscription } from "../models/subscription.model.js";
-import mongoose from "mongoose";
+import mongoose, { isValidObjectId } from "mongoose";
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
@@ -77,6 +77,53 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
     );
 });
 
+const getChannelSubscribersList = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+
+    if (!userId) {
+        throw new ApiError(400, "Channel id is required");
+    }
+
+    console.log("here");
+
+    const subscribers = await Subscription.aggregate([
+        {
+            $match: {
+                channel: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "subscriber",
+                foreignField: "_id",
+                as: "subscriberDetails",
+            },
+        },
+        {
+            $group: {
+                _id: "$channel",
+                subscriberDetails: {
+                    $push: "$subscriberDetails",
+                },
+            },
+        },
+        {
+            $unwind: "$subscriberDetails",
+        },
+    ]);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                subscribers,
+                "Subscribers fetched successfully"
+            )
+        );
+});
+
 const getSubscribedChannels = asyncHandler(async (req, res) => {
     const { subscriberId } = req.params;
 
@@ -106,4 +153,32 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
     );
 });
 
-export { toggleSubscription, getUserChannelSubscribers, getSubscribedChannels };
+const getChannelSubscriptionById = asyncHandler(async (req, res) => {
+    const { channelId } = req.params;
+    console.log(req.params);
+
+    if (!channelId) {
+        throw new ApiError("Channel ID is Required");
+    }
+
+    const isSubscribed = await Subscription.findOne({
+        subscriber: req.user?._id,
+        channel: new mongoose.Types.ObjectId(channelId),
+    });
+
+    res.status(200).json(
+        new ApiResponse(
+            200,
+            { isSubscribed: isSubscribed ? true : false },
+            "Channel Subscription fetched successfully"
+        )
+    );
+});
+
+export {
+    toggleSubscription,
+    getUserChannelSubscribers,
+    getSubscribedChannels,
+    getChannelSubscribersList,
+    getChannelSubscriptionById,
+};

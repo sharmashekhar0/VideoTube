@@ -72,7 +72,7 @@ function LikedVideos() {
 															?.owner_details
 															?.username
 													}
-													className="w-full h-full rounded-full"
+													className="w-full h-full rounded-full object-cover"
 												/>
 											</div>
 											<div className="w-full">

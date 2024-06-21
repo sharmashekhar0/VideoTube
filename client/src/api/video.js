@@ -43,16 +43,35 @@ const getVideoById = async (videoId) => {
 	}
 };
 
-const updateVideo = async (videoId) => {
+const updateViewsCount = async (videoId) => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/videos/views/${videoId}`,
+			{
+				method: "PATCH",
+				credentials: "include",
+			}
+		);
+		const res = await response.json();
+		return res;
+	} catch (error) {
+		console.log("Error while updating videos count :: ", error);
+	}
+};
+
+const updateVideo = async (data, videoId) => {
 	try {
 		const response = await fetch(
 			`http://localhost:8000/api/v1/videos/${videoId}`,
 			{
-				method: "GET",
+				method: "PATCH",
 				credentials: "include",
+				body: data,
 			}
 		);
-		console.log("Update Video Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Update Video Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while updating video :: ", error);
 	}
@@ -87,11 +106,44 @@ const togglePublishStatus = async (videoId) => {
 	}
 };
 
+const getTotalViewsCount = async () => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/videos/views`,
+			{ method: "GET", credentials: "include" }
+		);
+		const res = await response.json();
+		return res;
+	} catch (error) {
+		console.log("Error while getting total views :: ", error);
+	}
+};
+
+const getVideoLikeCount = async () => {
+	try {
+		const response = await fetch(
+			"http://localhost:8000/api/v1/videos/likes",
+			{
+				method: "GET",
+				credentials: "include",
+			}
+		);
+		const res = await response.json();
+		console.log(res);
+		return res;
+	} catch (error) {
+		console.log("Error while getting videos like count :: ", error);
+	}
+};
+
 export {
 	getAllVideos,
 	publishVideo,
 	getVideoById,
 	updateVideo,
 	deleteVideo,
+	updateViewsCount,
 	togglePublishStatus,
+	getVideoLikeCount,
+	getTotalViewsCount,
 };

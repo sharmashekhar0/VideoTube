@@ -108,18 +108,114 @@ const getLikedVideos = asyncHandler(async (req, res) => {
         {
             $match: {
                 likedBy: new mongoose.Types.ObjectId(userId),
-                video: { $exists: true },
+            },
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "video",
+                foreignField: "_id",
+                as: "video_details",
+            },
+        },
+        {
+            $unwind: "$video_details",
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "video_details.owner", // Assuming the owner field in videos collection refers to the user
+                foreignField: "_id",
+                as: "video_details.owner_details",
+            },
+        },
+        {
+            $unwind: "$video_details.owner_details",
+        },
+        {
+            $group: {
+                _id: "$likedBy",
+                videos: {
+                    $push: {
+                        video_details: "$video_details",
+                        owner: "$video_details.owner_details",
+                    },
+                },
             },
         },
     ]);
 
+    console.log(likedVideos);
+
     res.status(200).json(
         new ApiResponse(
             200,
-            { likedVideos: likedVideos },
+            { likedVideos: likedVideos[0]?.videos },
             "Liked videos fetched successfully"
         )
     );
 });
 
-export { toggleVideoLike, toggleCommentLike, toggleTweetLike, getLikedVideos };
+const getVideoLikeById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!videoId || !isValidObjectId(videoId)) {
+        throw new ApiError(400, "Video id is not found or invalid");
+    }
+
+    const isLiked = await Like.findOne({
+        video: new mongoose.Types.ObjectId(videoId),
+        likedBy: req.user?._id,
+    });
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { isLiked: isLiked ? true : false },
+                "Video like fetched successfully"
+            )
+        );
+});
+
+const getCommentLikeById = asyncHandler(async (req, res) => {
+    const { commentId } = req.params;
+
+    if (!commentId || !isValidObjectId(commentId)) {
+        throw new ApiError(400, "Video id is not found or invalid");
+    }
+
+    const isLiked = await Like.findOne({
+        video: new mongoose.Types.ObjectId(commentId),
+        likedBy: req.user?._id,
+    });
+
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { success: true }, isLiked ? true : false));
+});
+
+const getAllTweetLike = asyncHandler(async (req, res) => {
+    const userId = req.user?._id;
+
+    if (!userId) {
+        throw new ApiError(400, "User id is required");
+    }
+
+    const likedTweets = await Like.find();
+
+    res.status(200).json(
+        new ApiResponse(200, likedTweets, "Liked tweets fetched successfully")
+    );
+});
+
+export {
+    toggleVideoLike,
+    toggleCommentLike,
+    toggleTweetLike,
+    getLikedVideos,
+    getVideoLikeById,
+    getCommentLikeById,
+    getAllTweetLike,
+};

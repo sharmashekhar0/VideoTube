@@ -6,6 +6,9 @@ import {
     updateVideo,
     deleteVideo,
     togglePublishStatus,
+    incrementViewsCount,
+    getTotalViewsCount,
+    getVideoLikeCount,
 } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { upload } from "../middlewares/multer.middleware.js";
@@ -31,6 +34,10 @@ router
         publishVideo
     );
 
+router.route("/views").get(getTotalViewsCount);
+router.route("/likes").get(getVideoLikeCount);
+
+router.route("/views/:videoId").patch(incrementViewsCount);
 router
     .route("/:videoId")
     .get(getVideoById)

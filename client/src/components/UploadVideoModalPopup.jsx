@@ -1,9 +1,11 @@
 import React from "react";
 import { useForm } from "react-hook-form";
 import { publishVideo } from "../api/video";
+import useUploadVideo from "../hooks/useUploadVideo";
 
 function UploadVideoModalPopup() {
 	const { register, handleSubmit } = useForm();
+	const { onClose } = useUploadVideo();
 
 	const uploadVideoHandler = async (data) => {
 		try {
@@ -21,6 +23,7 @@ function UploadVideoModalPopup() {
 			}
 			const result = await publishVideo(formData);
 			console.log("Upload video response :: ", result.data);
+			onClose();
 		} catch (error) {
 			console.log("Error while uploading video", error);
 		}
@@ -34,9 +37,20 @@ function UploadVideoModalPopup() {
 			>
 				<div className="flex items-center justify-between border-b p-4">
 					<h2 className="text-xl font-semibold">Upload Videos</h2>
-					<button className="group/btn mr-1 flex w-auto items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e]">
-						Save
-					</button>
+					<div className="flex items-center gap-4">
+						<button
+							type="submit"
+							className="group/btn mr-1 flex w-auto items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e]"
+						>
+							Save
+						</button>
+						<button
+							onClick={onClose}
+							className="group/btn mr-1 flex w-auto items-center gap-x-2 bg-[#ae7aff] px-3 py-2 text-center font-bold text-black shadow-[5px_5px_0px_0px_#4f4e4e] transition-all duration-150 ease-in-out active:translate-x-[5px] active:translate-y-[5px] active:shadow-[0px_0px_0px_0px_#4f4e4e]"
+						>
+							Close
+						</button>
+					</div>
 				</div>
 				<div className="mx-auto flex w-full max-w-3xl flex-col gap-y-4 p-4">
 					<div className="w-full border-2 border-dashed px-4 py-12 text-center">

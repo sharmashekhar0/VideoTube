@@ -7,7 +7,9 @@ const toggleVideoLike = async (videoId) => {
 				credentials: "include",
 			}
 		);
-		console.log("Toggle Video Like Response :: ", await response.json());
+		const result = await response.json();
+		console.log("Toggle Video Like Response :: ", result);
+		return result;
 	} catch (error) {
 		console.log("Error while toggling video like :: ", error);
 	}
@@ -37,9 +39,28 @@ const toggleTweetLike = async (tweetId) => {
 				credentials: "include",
 			}
 		);
-		console.log("Toggle Tweet Like Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Toggle Tweet Like Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while toggling tweet like :: ", error);
+	}
+};
+
+const getAllTweetLike = async () => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/likes/tweets`,
+			{
+				method: "GET",
+				credentials: "include",
+			}
+		);
+		const res = await response.json();
+		console.log("Toggle Tweet Like Response :: ", res);
+		return res;
+	} catch (error) {
+		console.log("Error while getting all tweet like :: ", error);
 	}
 };
 
@@ -60,4 +81,28 @@ const getLikedVideos = async () => {
 	}
 };
 
-export { toggleVideoLike, toggleCommentLike, toggleTweetLike, getLikedVideos };
+const getVideoLikeById = async (videoId) => {
+	try {
+		const response = await fetch(
+			`http://localhost:8000/api/v1/likes/videos/${videoId}`,
+			{
+				method: "GET",
+				credentials: "include",
+			}
+		);
+		const result = await response.json();
+		console.log("Like Videos Response :: ", result);
+		return result;
+	} catch (error) {
+		console.log("Error while getting like videos :: ", error);
+	}
+};
+
+export {
+	toggleVideoLike,
+	toggleCommentLike,
+	toggleTweetLike,
+	getLikedVideos,
+	getAllTweetLike,
+	getVideoLikeById,
+};

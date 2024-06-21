@@ -19,16 +19,17 @@ const registerUser = async (data) => {
 		);
 
 		if (!registeredUser) {
-			throw new error("Registration failed :: ", registerUser);
+			throw new Error("Registration failed");
 		}
-
-		console.log("Registered user :: ", await registeredUser.json());
+		const res = await registeredUser.json();
+		console.log("Registered user :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while registering user :: ", error);
 	}
 };
 
-const login = async (data) => {
+const login = async (data, setError) => {
 	try {
 		let logginInUser = await fetch(
 			"http://localhost:8000/api/v1/users/login",
@@ -41,16 +42,16 @@ const login = async (data) => {
 				body: JSON.stringify(data),
 			}
 		);
-
-		if (!logginInUser) {
-			throw new error("Login failed");
+		if (logginInUser?.status != 200) {
+			setError("Login Failed");
+			throw new Error("Login failed");
 		}
 
 		logginInUser = await logginInUser.json();
 		console.log("User logged in :: ", logginInUser);
 		return logginInUser.data.user;
 	} catch (error) {
-		console.log("Error while logging the user :: ", error);
+		console.log("Error while logging the user :: ", error?.message);
 	}
 };
 
@@ -146,10 +147,9 @@ const updateAccountDetails = async (data) => {
 				body: JSON.stringify(data),
 			}
 		);
-		console.log(
-			"Update Account Details Response :: ",
-			await response.json()
-		);
+		const res = await response.json();
+		console.log("Update Account Details Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while updating account details :: ", error);
 	}
@@ -157,18 +157,29 @@ const updateAccountDetails = async (data) => {
 
 const updateAvatar = async (data) => {
 	try {
+		console.log(data);
+		const formData = new FormData();
+		for (const key in data) {
+			if (data[key] instanceof FileList) {
+				Array.from(data[key]).forEach((file) => {
+					formData.append(key, file);
+				});
+			} else {
+				formData.append(key, data[key]);
+			}
+		}
 		const response = await fetch(
 			"http://localhost:8000/api/v1/users/avatar/",
 			{
 				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
+
 				credentials: "include",
-				body: JSON.stringify(data),
+				body: formData,
 			}
 		);
-		console.log("Update Avatar Response :: ", await response.json());
+		const res = await response.json();
+		console.log("Update Avatar Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while updating avatar :: ", error);
 	}
@@ -176,20 +187,48 @@ const updateAvatar = async (data) => {
 
 const updateCoverImage = async (data) => {
 	try {
-		const response = fetch(
+		console.log(data);
+		const formData = new FormData();
+		for (const key in data) {
+			if (data[key] instanceof FileList) {
+				Array.from(data[key]).forEach((file) => {
+					formData.append(key, file);
+				});
+			} else {
+				formData.append(key, data[key]);
+			}
+		}
+		const response = await fetch(
 			"http://localhost:8000/api/v1/users/cover-image/",
 			{
 				method: "PATCH",
-				headers: {
-					"Content-Type": "application/json",
-				},
 				credentials: "include",
-				body: JSON.stringify(data),
+				body: formData,
 			}
 		);
-		console.log("Update Cover Image Response :: ", (await response).json());
+		const res = await response.json();
+		console.log("Update Cover Image Response :: ", res);
+		return res;
 	} catch (error) {
 		console.log("Error while updating cover image :: ", error);
+	}
+};
+
+const addVideoToWatchHistory = async (videoId) => {
+	try {
+		console.log(videoId);
+		const response = await fetch(
+			`http://localhost:8000/api/v1/users/history/${videoId}`,
+			{
+				method: "POST",
+				credentials: "include",
+			}
+		);
+		const result = await response.json();
+		console.log("Watch History Response :: ", result);
+		return result;
+	} catch (error) {
+		console.log("Error while getting watch history :: ", error);
 	}
 };
 
@@ -237,6 +276,7 @@ export {
 	updateAccountDetails,
 	updateAvatar,
 	updateCoverImage,
+	addVideoToWatchHistory,
 	getWatchHistory,
 	getUserChannelProfile,
 };

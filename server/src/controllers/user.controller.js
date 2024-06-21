@@ -111,22 +111,29 @@ const login = asyncHandler(async (req, res) => {
 
     console.log("Body :: ", req.body);
 
-    if (!(username || email)) {
-        throw new ApiError(400, "username or email are required");
+    if (!username || !email) {
+        throw new ApiError(400, "Both username and email are required");
     }
 
-    const user = await User.findOne({
-        $or: [{ username }, { email }],
-    });
+    console.log(username);
+    console.log(email);
+    console.log(password);
+
+    const user = await User.findOne({ username, email });
+
+    console.log(user);
 
     if (!user) {
-        throw new ApiError(400, "User does not exist");
+        throw new ApiError(
+            400,
+            "User does not exist with provided username and email"
+        );
     }
 
     const isPasswordValid = await user.isPasswordCorrect(password);
 
     if (!isPasswordValid) {
-        throw new ApiError(401, "Password is Invalid");
+        throw new ApiError(401, "Password is invalid");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(
@@ -150,7 +157,7 @@ const login = asyncHandler(async (req, res) => {
             new ApiResponse(
                 200,
                 { user: loggedInUser, accessToken, refreshToken },
-                "User loggedIn successfully"
+                "User logged in successfully"
             )
         );
 });
@@ -278,14 +285,15 @@ const getCurrentUser = asyncHandler(async (req, res) => {
 const updateAccountDetails = asyncHandler(async (req, res) => {
     const { username, email, fullName } = req.body;
 
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (email) updateFields.email = email;
+    if (fullName) updateFields.fullName = fullName;
+
     const user = await User.findByIdAndUpdate(
         req.user?._id,
         {
-            $set: {
-                fullName,
-                username,
-                email,
-            },
+            $set: updateFields,
         },
         { new: true }
     ).select("-password -refreshToken");
@@ -297,6 +305,7 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
 
 const updateAvatar = asyncHandler(async (req, res) => {
     const avatarLocalPath = req.file?.path;
+    console.log(req);
 
     if (!avatarLocalPath) {
         throw new ApiError(400, "Avatar file required");
@@ -351,11 +360,13 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     }
 
     const channel = await User.aggregate([
+        // Match the user by username
         {
             $match: {
                 username: username?.toLowerCase(),
             },
         },
+        // Lookup the subscribers for the user
         {
             $lookup: {
                 from: "subscriptions",
@@ -364,6 +375,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "subscribers",
             },
         },
+        // Lookup the channels the user is subscribed to
         {
             $lookup: {
                 from: "subscriptions",
@@ -372,6 +384,16 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "subscribedTo",
             },
         },
+        // Lookup the user details for the channels the user is subscribed to
+        {
+            $lookup: {
+                from: "users",
+                localField: "subscribedTo.channel",
+                foreignField: "_id",
+                as: "channelSubscribedTo",
+            },
+        },
+        // Lookup the playlists owned by the user
         {
             $lookup: {
                 from: "playlists",
@@ -380,6 +402,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "playlists",
             },
         },
+        // Lookup the videos owned by the user
         {
             $lookup: {
                 from: "videos",
@@ -388,6 +411,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "videos",
             },
         },
+        // Lookup the tweets owned by the user
         {
             $lookup: {
                 from: "tweets",
@@ -396,6 +420,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 as: "tweets",
             },
         },
+        // Add fields for subscriber count, subscription count, and whether the current user is subscribed
         {
             $addFields: {
                 subscriberCount: {
@@ -415,6 +440,72 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 },
             },
         },
+        // Lookup the subscriber count for each channel in the subscribedTo list
+        {
+            $lookup: {
+                from: "subscriptions",
+                let: { channelIds: "$subscribedTo.channel" },
+                pipeline: [
+                    // Match subscriptions where the channel is in the subscribedTo list
+                    {
+                        $match: {
+                            $expr: { $in: ["$channel", "$$channelIds"] },
+                        },
+                    },
+                    // Group by channel and count the number of subscribers
+                    {
+                        $group: {
+                            _id: "$channel",
+                            count: { $sum: 1 },
+                        },
+                    },
+                ],
+                as: "channelSubscriberCounts",
+            },
+        },
+        // Add subscriber count to each channel in the channelSubscribedTo list
+        {
+            $addFields: {
+                channelSubscribedTo: {
+                    $map: {
+                        input: "$channelSubscribedTo",
+                        as: "channel",
+                        in: {
+                            $mergeObjects: [
+                                "$$channel",
+                                {
+                                    subscriberCount: {
+                                        $let: {
+                                            vars: {
+                                                countObj: {
+                                                    $arrayElemAt: [
+                                                        {
+                                                            $filter: {
+                                                                input: "$channelSubscriberCounts",
+                                                                as: "count",
+                                                                cond: {
+                                                                    $eq: [
+                                                                        "$$count._id",
+                                                                        "$$channel._id",
+                                                                    ],
+                                                                },
+                                                            },
+                                                        },
+                                                        0,
+                                                    ],
+                                                },
+                                            },
+                                            in: "$$countObj.count",
+                                        },
+                                    },
+                                },
+                            ],
+                        },
+                    },
+                },
+            },
+        },
+        // Project the required fields
         {
             $project: {
                 fullName: 1,
@@ -423,6 +514,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
                 channelSubscribedToCount: 1,
                 isSubscribed: 1,
                 avatar: 1,
+                channelSubscribedTo: 1,
                 coverImage: 1,
                 email: 1,
                 videos: 1,
@@ -441,57 +533,111 @@ const getUserChannelProfile = asyncHandler(async (req, res) => {
     );
 });
 
-const getWatchHistory = asyncHandler(async (req, res) => {
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id),
-            },
-        },
-        {
-            $lookup: {
-                from: "videos",
-                localField: "watchHistory",
-                foreignField: "_id",
-                as: "watchHistory",
-                pipeline: [
-                    {
-                        $lookup: {
-                            from: "users",
-                            localField: "owner",
-                            foreignField: "_id",
-                            as: "owner",
-                            pipeline: [
-                                {
-                                    $project: {
-                                        fullName: 1,
-                                        username: 1,
-                                        avatar: 1,
-                                    },
-                                },
-                            ],
-                        },
-                    },
-                    {
-                        $addFields: {
-                            owner: {
-                                $first: "$owner",
-                            },
-                        },
-                    },
-                ],
-            },
-        },
-    ]);
+const addVideoToWatchHistory = asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+    const { videoId } = req.params;
+    console.log(videoId);
 
-    console.log("User :: ", user);
+    // Remove videoId if it already exists in watchHistory
+    await User.findByIdAndUpdate(
+        userId,
+        { $pull: { watchHistory: videoId } },
+        { useFindAndModify: false }
+    );
+
+    // Add videoId to watchHistory
+    const user = await User.findByIdAndUpdate(
+        userId,
+        { $addToSet: { watchHistory: videoId } },
+        { new: true, useFindAndModify: false }
+    );
 
     return res
         .status(200)
         .json(
             new ApiResponse(
                 200,
-                { history: user[0].watchHistory },
+                { user: user },
+                "Video added to watch history successfully"
+            )
+        );
+});
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+    const userId = req?.user?._id;
+
+    const watchHistory = await User.aggregate([
+        {
+            $match: {
+                _id: new mongoose.Types.ObjectId(userId),
+            },
+        },
+        {
+            $unwind: "$watchHistory",
+        },
+        {
+            $lookup: {
+                from: "videos",
+                localField: "watchHistory",
+                foreignField: "_id",
+                as: "videoDetails",
+            },
+        },
+        {
+            $unwind: "$videoDetails",
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "videoDetails.owner",
+                foreignField: "_id",
+                as: "ownerDetails",
+            },
+        },
+        {
+            $unwind: "$ownerDetails",
+        },
+        {
+            $group: {
+                _id: null,
+                watchHistory: {
+                    $push: {
+                        video_details: "$videoDetails",
+                        owner_details: "$ownerDetails",
+                    },
+                },
+            },
+        },
+        {
+            $unwind: "$watchHistory",
+        },
+        {
+            $sort: {
+                "watchHistory.video_details.updatedAt": -1,
+            },
+        },
+        {
+            $group: {
+                _id: null,
+                watchHistory: {
+                    $push: "$watchHistory",
+                },
+            },
+        },
+        {
+            $project: {
+                _id: 0,
+                watchHistory: 1,
+            },
+        },
+    ]);
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                { watchHistory },
                 "Watch history fetched successfully"
             )
         );
@@ -508,5 +654,6 @@ export {
     updateAvatar,
     updateCoverImage,
     getWatchHistory,
+    addVideoToWatchHistory,
     getUserChannelProfile,
 };

@@ -1,6 +1,17 @@
 import React from "react";
+import { deleteVideo } from "../api/video";
 
-function DeleteVideoModalPopup() {
+function DeleteVideoModalPopup({ onClose, video }) {
+	const deleteVideoHandler = async () => {
+		try {
+			console.log("Video Id :: ", video?._id);
+			await deleteVideo(video?._id);
+			onClose("delete");
+		} catch (error) {
+			console.log("Error while deleting video :: ", error);
+		}
+	};
+
 	return (
 		<div className="fixed inset-0 top-[calc(66px)] z-10 flex flex-col bg-black/50 px-4 pb-[86px] pt-4 sm:top-[calc(82px)] sm:px-14 sm:py-8">
 			<div className="mx-auto w-full max-w-lg overflow-auto rounded-lg border border-gray-700 bg-[#121212] p-4">
@@ -28,7 +39,10 @@ function DeleteVideoModalPopup() {
 							deleted, you will not be able to recover it.
 						</span>
 					</h2>
-					<button className="ml-auto h-6 w-6 shrink-0">
+					<button
+						onClick={() => onClose("delete")}
+						className="ml-auto h-6 w-6 shrink-0"
+					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -46,10 +60,16 @@ function DeleteVideoModalPopup() {
 					</button>
 				</div>
 				<div className="grid grid-cols-2 gap-4">
-					<button className="col-span-2 border px-4 py-3 sm:col-span-1">
+					<button
+						onClick={() => onClose("delete")}
+						className="col-span-2 border px-4 py-3 sm:col-span-1"
+					>
 						Cancel
 					</button>
-					<button className="col-span-2 bg-red-700 px-4 py-3 disabled:bg-[#E4D3FF] sm:col-span-1">
+					<button
+						onClick={deleteVideoHandler}
+						className="col-span-2 bg-red-700 px-4 py-3 disabled:bg-[#E4D3FF] sm:col-span-1"
+					>
 						Delete
 					</button>
 				</div>
