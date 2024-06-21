@@ -295,7 +295,9 @@ const getTotalViewsCount = asyncHandler(async (req, res) => {
         return res.status(200).json(new ApiResponse(200, { totalViews: 0 }));
     }
 
-    return res.status(200).json(new ApiResponse(200, totalViews[0].totalViews));
+    return res
+        .status(200)
+        .json(new ApiResponse(200, { totalViews: totalViews[0].totalViews }));
 });
 
 const getVideoLikeCount = asyncHandler(async (req, res) => {

@@ -69,7 +69,7 @@ function AdminDashboard() {
 		try {
 			const response = await getTotalViewsCount();
 			console.log(response);
-			setTotalViewsCount(response?.data);
+			setTotalViewsCount(response?.data?.totalViews);
 		} catch (error) {
 			console.log("Error while getting total views :: ", error);
 		}
